@@ -5,6 +5,7 @@ import useConfig from "../../../../../store/useConfig";
 import { isContentImage } from "../lib/utils/calculateNodeSize";
 import { TextRenderer } from "./TextRenderer";
 import * as Styled from "./styles";
+import { useModal } from "../../../../../store/useModal";
 
 const StyledTextNodeWrapper = styled.span<{ $isParent: boolean }>`
   display: flex;
@@ -26,11 +27,49 @@ const StyledImage = styled.img`
   background: ${({ theme }) => theme.BACKGROUND_MODIFIER_ACCENT};
 `;
 
+const EditButton = styled.button`
+  background: none;
+  border: none;
+  padding: 4px;
+  color: ${({ theme }) => theme.NODE_COLORS.TEXT};
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 3px;
+  
+  &:hover {
+    background: ${({ theme }) => theme.BACKGROUND_MODIFIER_ACCENT};
+  }
+`;
+
+const NodeContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+
+  &:hover ${EditButton} {
+    opacity: 1;
+  }
+`;
+
 const Node = ({ node, x, y }: CustomNodeProps) => {
   const { text, width, height } = node;
   const imagePreviewEnabled = useConfig(state => state.imagePreviewEnabled);
   const isImage = imagePreviewEnabled && isContentImage(JSON.stringify(text[0].value));
   const value = text[0].value;
+  const setVisible = useModal(state => state.setVisible);
+  
+  const handleEdit = () => {
+    setVisible("NodeModal", true);
+  };
 
   return (
     <Styled.StyledForeignObject
@@ -52,7 +91,12 @@ const Node = ({ node, x, y }: CustomNodeProps) => {
           $isParent={false}
         >
           <Styled.StyledKey $value={value} $type={typeof text[0].value}>
-            <TextRenderer>{value}</TextRenderer>
+            <NodeContent>
+              <TextRenderer>{value}</TextRenderer>
+              {typeof value !== "object" || value === null ? (
+                <EditButton onClick={handleEdit} title="Edit value">✎</EditButton>
+              ) : null}
+            </NodeContent>
           </Styled.StyledKey>
         </StyledTextNodeWrapper>
       )}
